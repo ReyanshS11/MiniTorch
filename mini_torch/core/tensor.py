@@ -39,6 +39,9 @@ class Tensor:
     def __pow__(self, power) -> Tensor:
         return ops.__pow__(self, power)
     
+    def __matmul__(self, other) -> Tensor:
+        return ops.__matmul__(self, other)
+
     def sum(self) -> Tensor:
         return ops.sum(self)
     
@@ -52,20 +55,9 @@ class Tensor:
         autograd.backward(self)
 
 if __name__ == "__main__":
-    x = Tensor(
-        [
-            [[1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0]],
+    x = Tensor([[9.0, 1.0, 6.0], [1.0, 7.0, 2.0]], requires_grad=True)
+    y = Tensor([[4.0, 7.0], [2.0, 5.0], [8.0, 1.0]], requires_grad=True)
 
-            [[7.0, 8.0, 9.0],
-            [10.0, 11.0, 12.0]]
-        ],
-        requires_grad=True
-    )
+    z = x @ y
 
-    y = x.reshape([3, 2, 2])
-
-    loss = y.sum()
-    loss.backward()
-
-    print(y.data, "\n\n", y.grad)
+    print(x.data, "\n\n", y.data)

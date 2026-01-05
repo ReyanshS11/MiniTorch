@@ -1,10 +1,10 @@
 import torch
+import torch.nn as nn
 import numpy as np
 
-x = torch.tensor([[1.0],[2.0],[3.0]], requires_grad=True)
-y = torch.tensor([10.0,20.0], requires_grad=True)
-z = x * y
-loss = z.sum()
-loss.backward()
+x = torch.tensor([[9.0, 1.0, 6.0], [1.0, 7.0, 2.0]], requires_grad=True)
+y = torch.tensor([[4.0, 7.0], [2.0, 5.0], [8.0, 1.0]], requires_grad=True)
 
-print(x.grad, y.grad)
+z = x @ y
+
+print(x, "\n\n", y)

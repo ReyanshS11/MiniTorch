@@ -95,6 +95,24 @@ def __pow__(tns: Tensor, power) -> Tensor:
     out._backward = _backward
     return out
 
+def __matmul__(tns: Tensor, other) -> Tensor:
+    other = other if isinstance(other, Tensor) else Tensor(other)
+    out = Tensor(tns.data @ other.data, requires_grad=tns.requires_grad or other.requires_grad)
+    out._prev = {tns, other}
+
+    def _backward():
+        if tns.requires_grad:
+            grad_A = out.grad @ other.data.T
+            grad_A = grad_A.unbroadcast(grad_A, tns.data.shape)
+            tns.grad = tns.grad + grad_A if tns.grad is not None else grad_A
+        if other.requires_grad:
+            grad_A = tns.data.T @ out.grad
+            grad_A = grad_A.unbroadcast(grad_A, other.data.shape)
+            tns.grad = other.grad + grad_A if other.grad is not None else grad_A  
+
+    out._backward = _backward
+    return out
+
 def sum(tns: Tensor) -> Tensor:
     out = Tensor(tns.data.sum(), requires_grad=tns.requires_grad)
     out._prev = {tns}
