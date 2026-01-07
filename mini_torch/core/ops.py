@@ -1,6 +1,7 @@
 from __future__ import annotations
 import numpy as np
 from .tensor import Tensor
+from .autograd import unbroadcast
 
 def __add__(tns: Tensor, other) -> Tensor:
     other = other if isinstance(other, Tensor) else Tensor(other, requires_grad=tns.requires_grad)
@@ -9,10 +10,10 @@ def __add__(tns: Tensor, other) -> Tensor:
 
     def _backward():
         if tns.requires_grad:
-            grad = tns.unbroadcast(out.grad, tns.data.shape)
+            grad = unbroadcast(out.grad, tns.data.shape)
             tns.grad = tns.grad + grad if tns.grad is not None else grad
         if other.requires_grad:
-            grad = tns.unbroadcast(out.grad, other.data.shape)
+            grad = unbroadcast(out.grad, other.data.shape)
             other.grad = other.grad + grad if other.grad is not None else grad
     
     out._backward = _backward
@@ -25,10 +26,10 @@ def __sub__(tns: Tensor, other) -> Tensor:
 
     def _backward():
         if tns.requires_grad:
-            grad = tns.unbroadcast(out.grad, tns.data.shape)
+            grad = unbroadcast(out.grad, tns.data.shape)
             tns.grad = tns.grad + grad if tns.grad is not None else out.grad
         if other.requires_grad:
-            grad = tns.unbroadcast(out.grad, other.data.shape)
+            grad = unbroadcast(out.grad, other.data.shape)
             other.grad = other.grad - grad if other.grad is not None else -out.grad # type: ignore
     
     out._backward = _backward
@@ -42,11 +43,11 @@ def __mul__(tns: Tensor, other) -> Tensor:
     def _backward():
         if tns.requires_grad:
             grad = out.grad * other.data
-            grad = tns.unbroadcast(grad, tns.data.shape)
+            grad = unbroadcast(grad, tns.data.shape)
             tns.grad = tns.grad + grad if tns.grad is not None else grad
         if other.requires_grad:
             grad = out.grad * tns.data
-            grad = tns.unbroadcast(grad, other.data.shape)
+            grad = unbroadcast(grad, other.data.shape)
             other.grad = other.grad + grad if other.grad is not None else grad
 
     out._backward = _backward
@@ -60,11 +61,11 @@ def __truediv__(tns: Tensor, other) -> Tensor:
     def _backward():
         if tns.requires_grad:
             grad_x = out.grad / other.data
-            grad_x = tns.unbroadcast(grad_x, tns.data.shape)
+            grad_x = unbroadcast(grad_x, tns.data.shape)
             tns.grad = tns.grad + grad_x if tns.grad is not None else grad_x
         if other.requires_grad:
             grad_y = -out.grad * tns.data / (other.data ** 2) # type: ignore
-            grad_y = tns.unbroadcast(grad_y, other.data.shape)
+            grad_y = unbroadcast(grad_y, other.data.shape)
             other.grad = other.grad + grad_y if other.grad is not None else grad_y
     
     out._backward = _backward
@@ -76,7 +77,7 @@ def __neg__(tns: Tensor) -> Tensor:
 
     def _backward():
         if tns.requires_grad:
-            grad = tns.unbroadcast(out.grad, tns.data.shape)
+            grad = unbroadcast(out.grad, tns.data.shape)
             tns.grad = tns.grad - grad if tns.grad is not None else -grad # type: ignore
 
     out._backward = _backward
@@ -90,7 +91,7 @@ def __pow__(tns: Tensor, power) -> Tensor:
     def _backward():
         if tns.requires_grad:
             grad = power * (tns.data ** (power - 1)) * out.grad # type: ignore
-            grad = tns.unbroadcast(grad, tns.data.shape)
+            grad = unbroadcast(grad, tns.data.shape)
             tns.grad = tns.grad + grad if tns.grad is not None else grad
 
     out._backward = _backward
@@ -102,14 +103,25 @@ def __matmul__(tns: Tensor, other) -> Tensor:
     out._prev = {tns, other}
 
     def _backward():
+        A = tns.data
+        B = other.data
+        G = out.grad
+
+        A2 = np.atleast_2d(A)
+        B2 = np.atleast_2d(B)
+        G2 = np.atleast_2d(G)
+
         if tns.requires_grad:
-            grad_A = out.grad @ other.data.T
-            grad_A = grad_A.unbroadcast(grad_A, tns.data.shape)
-            tns.grad = tns.grad + grad_A if tns.grad is not None else grad_A
+            grad_A = G2 @ B2.T
+            grad_A = grad_A.reshape(A.shape)
+            grad_A = unbroadcast(grad_A, A.shape)
+            tns.grad = grad_A if tns.grad is None else tns.grad + grad_A
+
         if other.requires_grad:
-            grad_A = tns.data.T @ out.grad
-            grad_A = grad_A.unbroadcast(grad_A, other.data.shape)
-            tns.grad = other.grad + grad_A if other.grad is not None else grad_A  
+            grad_B = G2.T @ A2
+            grad_B = grad_B.reshape(B.shape)
+            grad_B = unbroadcast(grad_B, B.shape)
+            other.grad = grad_B if other.grad is None else other.grad + grad_B
 
     out._backward = _backward
     return out
@@ -167,7 +179,7 @@ def T(tns: Tensor) -> Tensor:
 
     def _backward():
         if tns.requires_grad:
-            grad = out.grad.T()
+            grad = out.grad.T
             tns.grad = tns.grad + grad if tns.grad is not None else grad
     
     out._backward = _backward
