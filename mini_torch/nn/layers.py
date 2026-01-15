@@ -6,6 +6,8 @@ from mini_torch.core.tensor import Tensor
 from mini_torch.core.ops import cat, zeros_like, max, stack
 from .module import Module
 
+from typing import Sequence
+
 class Linear(Module):
     def __init__(self, in_features: int, out_features: int, bias: bool = True, a = 5):
         super().__init__()
@@ -70,7 +72,7 @@ class Conv1d(Module):
         P = self.padding
         D = self.dilation
 
-        W_out = (W + 2*self.padding - self.dilation*(K-1) - 1) // self.stride + 1
+        W_out = (W + 2*P - D*(K-1) - 1) // S + 1
         
         rows = []
         for b in range(B):
@@ -83,7 +85,7 @@ class Conv1d(Module):
                     for u in range(K):
                         x_index = start + D * u
                         
-                        if 0 <= x_index and x_index < W:
+                        if 0 <= x_index < W:
                             row.append(x[b, c, x_index])
                         else:
                             row.append(Tensor(0.0))
@@ -96,6 +98,81 @@ class Conv1d(Module):
         out_flat = X_col @ W_flat.T()
 
         out = out_flat.reshape((B, W_out, C_out)).T((0, 2, 1))
+
+        if self.bias is not None:
+            out = out + self.bias
+
+        return out
+    
+class Conv2d(Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, bias=True, a=5):
+        super().__init__()
+        self.a = a
+
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size if isinstance(kernel_size, tuple) else (kernel_size, kernel_size)
+        self.stride = stride if isinstance(stride, tuple) else (stride, stride)
+        self.padding = padding if isinstance(padding, tuple) else (padding, padding)
+        self.dilation = dilation if isinstance(dilation, tuple) else (dilation, dilation)
+
+        self.weight = Tensor(_kaiming_init((self.out_channels, self.in_channels, self.kernel_size[0], self.kernel_size[1]), self.out_channels, self.a, 11))
+        self.bias = Tensor(_kaiming_init((self.out_channels), self.out_channels, self.a, 11), requires_grad=True) if bias else None
+
+    def __call__(self, x: Tensor) -> Tensor:
+        if len(x.shape()) == 4:
+            B, C, H, W = x.shape()
+        elif len(x.shape()) == 3:
+            container = []
+            container.append(x)
+            x = stack(container)
+
+            B, C, H, W = x.shape()
+        else:
+            raise RuntimeError(
+                f"shape {x.shape()} not valid for Conv2d"
+            )
+
+        C_out = self.out_channels
+        C_in = self.in_channels
+        K_H = self.kernel_size[0]
+        K_W = self.kernel_size[1]
+
+        S = self.stride
+        P = self.padding
+        D = self.dilation
+
+        H_out = (H + 2*P[0] - D[0]*(K_H-1) - 1) // S[0] + 1
+        W_out = (W + 2*P[1] - D[1]*(K_W-1) - 1) // S[1] + 1
+        
+        rows = []
+        for b in range(B):
+            for i in range(H_out):
+                for j in range(W_out):
+                    patch = []
+
+                    start_H = i * S[0] - P[0]
+                    start_W = i * S[1] - P[1]
+
+                    for c in range(C_in):
+                        for u in range(K_H):
+                            for v in range(K_W):
+                                H_index = start_H + D[0] * u
+                                W_index = start_W + D[1] * u
+                                
+                                if 0 <= H_index < H and 0 <= W_index < W:
+                                    patch.append(x[b, c, H_index, W_index])
+                                else:
+                                    patch.append(Tensor(0.0))
+
+                    rows.append(stack(patch))
+
+        X_col = stack(rows)
+
+        W_flat = self.weight.reshape((C_out, C_in * K_H * K_W))
+        out_flat = X_col @ W_flat.T()
+
+        out = out_flat.reshape((B, H_out, W_out, C_out)).T((0, 3, 1, 2))
 
         if self.bias is not None:
             out = out + self.bias
