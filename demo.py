@@ -2,6 +2,7 @@ from mini_torch.core.tensor import Tensor
 from mini_torch.nn.layers import Linear, Conv1d, ReLU
 from mini_torch.nn.loss import MSELoss
 from mini_torch.optim.sgd import SGD
+from mini_torch.optim.adam import Adam
 from mini_torch.data.dataset import Dataset
 from mini_torch.data.dataloader import DataLoader
 
@@ -47,7 +48,7 @@ if __name__ == "__main__":
 
     model = Linear(12, 1)
 
-    optim = SGD(model.parameters(), lr=1e-3)
+    optim = Adam(model.parameters(), lr=1e-3)
     loss_fn = MSELoss()
 
     for epoch in range(10):

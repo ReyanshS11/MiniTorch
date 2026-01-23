@@ -55,7 +55,7 @@ model = nn.Linear(12, 1)
 # -----------------------------
 # Optimizer and loss
 # -----------------------------
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 loss_fn = nn.MSELoss()
 
 # -----------------------------

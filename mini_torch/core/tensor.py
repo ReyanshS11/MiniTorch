@@ -12,6 +12,7 @@ class Tensor:
         self._prev = set()
         self._backward = lambda: None
 
+        self.state_dict = {"m": 0, "v": 0, "v_max": 0}
         self.velocity = 0
 
     def numerical_grad(self, f, x, eps=1e-6):
