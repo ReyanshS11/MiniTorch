@@ -19,6 +19,8 @@ class SGD(Module):
 
     def step(self):
         for p in self.parameters:
+            assert isinstance(p, Tensor)
+
             if p.grad is None:
                 continue
 
@@ -32,3 +34,6 @@ class SGD(Module):
             p.data -= self.lr * v_new
 
             p.velocity = v_new
+
+
+
