@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     model = Linear(12, 1)
 
-    optim = Adam(model.parameters(), lr=1e-3)
+    optim = SGD(model.parameters(), lr=1e-3)
     loss_fn = MSELoss()
 
     for epoch in range(10):

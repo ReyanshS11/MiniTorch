@@ -34,6 +34,3 @@ class SGD(Module):
             p.data -= self.lr * v_new
 
             p.velocity = v_new
-
-
-
