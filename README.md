@@ -43,7 +43,9 @@ This project is for **learning purposes** and focuses on implementing:
 mini_torch/
 │
 ├── core/
-│   └── tensor.py          # Tensor + autograd engine
+|   ├── tensor.py          # Tensor + autograd engine
+│   ├── autograd.py
+│   └── ops.py 
 │
 ├── nn/
 │   ├── module.py          # Base Module class
