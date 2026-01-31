@@ -1,6 +1,6 @@
 from mini_torch.core.tensor import Tensor
 from mini_torch.nn.layers import Linear, Conv1d, ReLU
-from mini_torch.nn.loss import MSELoss
+from mini_torch.nn.loss import MSELoss, BCELoss
 from mini_torch.optim.sgd import SGD
 from mini_torch.optim.adam import Adam
 from mini_torch.data.dataset import Dataset

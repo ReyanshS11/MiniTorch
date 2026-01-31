@@ -35,6 +35,22 @@ def __sub__(tns: Tensor, other) -> Tensor:
     out._backward = _backward
     return out
 
+def __rsub__(other, tns: Tensor) -> Tensor:
+    other = other if isinstance(other, Tensor) else Tensor(other, requires_grad=tns.requires_grad)
+    out = Tensor(other.data - tns.data, requires_grad=tns.requires_grad or other.requires_grad)
+    out._prev = {other, tns}
+
+    def _backward():
+        if tns.requires_grad:
+            grad = unbroadcast(out.grad, tns.data.shape)
+            tns.grad = tns.grad + grad if tns.grad is not None else grad
+        if other.requires_grad:
+            grad = unbroadcast(out.grad, other.data.shape)
+            other.grad = other.grad - grad if other.grad is not None else -grad # type: ignore
+    
+    out._backward = _backward
+    return out
+
 def __mul__(tns: Tensor, other) -> Tensor:
     other = other if isinstance(other, Tensor) else Tensor(other, requires_grad=tns.requires_grad)
     out = Tensor(tns.data * other.data, requires_grad=tns.requires_grad or other.requires_grad)
@@ -126,6 +142,18 @@ def __matmul__(tns: Tensor, other) -> Tensor:
     out._backward = _backward
     return out
 
+def log(tns: Tensor) -> Tensor:
+    out = Tensor(np.log(tns.data), requires_grad=tns.requires_grad)
+    out._prev = {tns}
+
+    def _backward():
+        if tns.requires_grad:
+            grad = out.grad / tns.data
+            tns.grad = tns.grad + grad if tns.grad is not None else grad
+
+    out._backward = _backward
+    return out
+
 def sum(tns: Tensor) -> Tensor:
     out = Tensor(tns.data.sum(), requires_grad=tns.requires_grad)
     out._prev = {tns}
@@ -189,6 +217,29 @@ def T(tns: Tensor, axes=None) -> Tensor:
     out._backward = _backward
     return out
 
+def clamp(tns: Tensor, min=None, max=None):
+    if min is not None:
+        out = maximum(tns, min)
+    if max is not None:
+        out = minimum(tns, max)
+    else:
+        out = tns
+
+    out._prev = {tns}
+
+    def _backward():
+        mask = np.ones_like(out.data, dtype=bool)
+        if min is not None:
+            mask &= out.data >= min
+        if max is not None:
+            mask &= out.data <= max
+        
+        if tns.requires_grad:
+            tns.grad = tns.grad + tns.grad * mask if tns.grad is not None else mask
+
+    out._backward = _backward
+    return out
+
 def __getitem__(tns: Tensor, *idx) -> Tensor:
     idx = idx[0][0]
     out = Tensor(tns.data[idx], requires_grad=tns.requires_grad)
@@ -224,7 +275,7 @@ def zeros_like(tns: Tensor, dtype=np.float32, requires_grad=False):
 def ones_like(tns: Tensor, dtype=np.float32, requires_grad=False):
     return Tensor(np.ones_like(tns), dtype=dtype, requires_grad=requires_grad)
 
-def max(tns: Tensor, other) -> Tensor:
+def maximum(tns: Tensor, other) -> Tensor:
     other = other if isinstance(other, Tensor) else Tensor(other)
     out = Tensor(np.maximum(tns.data, other.data), requires_grad=tns.requires_grad or other.requires_grad)
     out._prev = {tns, other}
@@ -240,7 +291,7 @@ def max(tns: Tensor, other) -> Tensor:
     out._backward = _backward
     return out 
 
-def min(tns: Tensor, other) -> Tensor:
+def minimum(tns: Tensor, other) -> Tensor:
     other = other if isinstance(other, Tensor) else Tensor(other)
     out = Tensor(np.minimum(tns.data, other.data), requires_grad=tns.requires_grad or other.requires_grad)
     out._prev = {tns, other}

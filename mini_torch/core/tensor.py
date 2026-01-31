@@ -30,6 +30,10 @@ class Tensor:
         from .ops import __sub__
         return __sub__(self, other)
     
+    def __rsub__(self, other) -> Tensor:
+        from .ops import __rsub__
+        return __rsub__(other, self)
+
     def __mul__(self, other) -> Tensor:
         from .ops import __mul__
         return __mul__(self, other)

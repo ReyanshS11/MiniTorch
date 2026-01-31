@@ -8,7 +8,7 @@ This project is for **learning purposes** and focuses on implementing:
 - Tensors with gradient tracking
 - Neural network layers
 - Loss functions
-- Optimizers (SGD, Adam, etc.)
+- Optimizers
 - DataLoader & Dataset abstractions
 - Training loops and models
 
@@ -25,7 +25,7 @@ This project is for **learning purposes** and focuses on implementing:
 - **Neural Network API**
   - `Module` base class
   - Layers: `Linear`, `Conv1d`, `Conv2d`, `Conv3d`, `ReLU`
-  - Losses: `MSELoss`
+  - Losses: `MSELoss`, `BCELoss`, `BCEWithLogitsLoss` (work in progress)
 
 - **Optimizers**
   - `SGD`
@@ -50,7 +50,7 @@ mini_torch/
 ├── nn/
 │   ├── module.py          # Base Module class
 │   ├── layers.py          # Linear, Conv1d, ReLU, etc.
-│   └── loss.py            # MSELoss, etc.
+│   └── loss.py            # MSELoss, BCELoss, etc.
 │
 ├── optim/
 │   ├── sgd.py
@@ -132,6 +132,8 @@ for epoch in range(100):
 
 - Elementwise:
   - `+`, `-`, `*`, `/`
+  - `log`, `pow`, `neg`, `rsub`
+  - `clamp`
 - Matrix:
   - `@` (matmul)
 - Reductions:

@@ -3,7 +3,7 @@ import torch
 
 from .init import _kaiming_init
 from mini_torch.core.tensor import Tensor
-from mini_torch.core.ops import cat, zeros_like, max, stack
+from mini_torch.core.ops import cat, zeros_like, maximum, stack
 from .module import Module
 
 from typing import Sequence
@@ -33,7 +33,7 @@ class ReLU(Module):
         super().__init__()
     
     def __call__(self, x: Tensor) -> Tensor:
-        return max(zeros_like(x), x)
+        return maximum(zeros_like(x), x)
     
 class Conv1d(Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, bias=True, a=5):
