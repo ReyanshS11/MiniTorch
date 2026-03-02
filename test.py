@@ -1,5 +1,5 @@
 from mini_torch.core.tensor import Tensor
-from mini_torch.core.ops import max
+from mini_torch.core.ops import maximum
 from mini_torch.nn.layers import Linear, ReLU, Conv1d, Conv2d, Conv3d
 from mini_torch.nn.loss import MSELoss
 from mini_torch.optim.sgd import SGD

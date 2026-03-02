@@ -50,9 +50,9 @@ class BCELoss(Module):
         return bce
     
 class BCEWithLogitsLoss(Module):
-    warnings.warn("As of now, this is the same as BCELoss. Sigmoid will be added later.")
-
     def __init__(self, weight=None, reduction="mean"):
+        warnings.warn("As of now, this is the same as BCELoss. Sigmoid will be added later.")
+
         self.weight = weight
         self.reduction = reduction
 
