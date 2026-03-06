@@ -149,7 +149,7 @@ for epoch in range(100):
 
 ## Speed Comparison (vs. PyTorch)
 
-![Comparison Graph](./benchmark\training_time_comparison_MiniTorch_PyTorch.png)
+![Comparison Graph](./benchmark/training_time_comparison_MiniTorch_PyTorch.png)
 
 **All tests were ran on the default benchmark found in ./benchmark 
 
