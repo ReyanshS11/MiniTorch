@@ -151,7 +151,7 @@ for epoch in range(100):
 
 ![Comparison Graph](benchmark\training_time_comparison_MiniTorch_PyTorch.png)
 
-**All tests were run on the default benchmark found in ./benchmark 
+**All tests were ran on the default benchmark found in ./benchmark 
 
 ---
 
