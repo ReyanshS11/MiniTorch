@@ -172,8 +172,6 @@ This is a **learning framework**, not meant for production use.
 
 ---
 
----
-
 ## 🧩 Future Work
 
 - [ ] CrossEntropyLoss
